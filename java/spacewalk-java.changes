@@ -1,3 +1,4 @@
+- Redefine available power_management.types for cobbler >= 3.3.1
 - Cleanup salt known_hosts when generating proxy containers config
 - Modify proxy containers configuration files set output
 - Change proxy containers config to tarball with yaml files
@@ -64,7 +65,7 @@ Thu May 26 12:30:12 CEST 2022 - jgonzalez@suse.com
 Thu May 26 09:27:43 CEST 2022 - jgonzalez@suse.com
 
 - version 4.3.28-1
-  * During re-activation, recalculate grains if 
+  * During re-activation, recalculate grains if
     contact method has been changed (bsc#1199677)
   * autoinstallation: missing whitespace after install URL (bsc#1199888)
 
