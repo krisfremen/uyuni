@@ -1,3 +1,4 @@
+- Adjust next_server cobbler settings for cobbler >= 3.3.1
 - Allow alternative usage of perl-Net-LibIDN2.
 
 -------------------------------------------------------------------
