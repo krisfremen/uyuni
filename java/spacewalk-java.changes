@@ -1,3 +1,4 @@
+- Fix virtFileSize type after cobbler upgrade
 - Redefine available power_management.types for cobbler >= 3.3.1
 - Cleanup salt known_hosts when generating proxy containers config
 - Modify proxy containers configuration files set output
