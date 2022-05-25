@@ -27,56 +27,124 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 
 /**
- * Base class has attributes common to
- * distros, profiles, system records
+ * Base class has attributes common to distros, profiles, system records.
+ *
  * @author paji
+ * @see <a href="https://cobbler.readthedocs.io/en/v3.3.3/code-autodoc/cobbler.items.html#module-cobbler.items.item">RTFD - Cobbler - 3.3.3 - Item</a>
  */
 public abstract class CobblerObject {
+    /**
+     * Constant to define the field name for the comment
+     */
     protected static final String COMMENT = "comment";
+    /**
+     * Constant to define the field name for the owners
+     */
     protected static final String OWNERS = "owners";
+    /**
+     * Constant to define the field name for the creation time of the object
+     */
     protected static final String CTIME = "ctime";
+    /**
+     * Constant to define the field name for the getter of kernel post options
+     */
     protected static final String KERNEL_OPTIONS_POST = "kernel_options_post";
+    /**
+     * Constant to define the field name for the setter of the kernel post options
+     */
     protected static final String SET_KERNEL_OPTIONS_POST = "kernel_options_post";
+    /**
+     * Constant to define the field name for the logical object depth in the inheritance
+     */
     protected static final String DEPTH = "depth";
+    /**
+     * Constant to define the field name for the getter of the kernel options
+     */
     protected static final String KERNEL_OPTIONS = "kernel_options";
+    /**
+     * Constant to define the field name for the setter of the kernel options
+     */
     protected static final String SET_KERNEL_OPTIONS = "kernel_options";
+    /**
+     * Constant to define the field name for name of an object
+     */
     protected static final String NAME = "name";
+    /**
+     * Constant to define the field name for the getter of the autoinstallation metadata
+     */
     protected static final String KS_META = "autoinstall_meta";
+    /**
+     * Constant to define the field name for the setter of the autoinstallation metadata
+     */
     protected static final String SET_KS_META = "autoinstall_meta";
+    /**
+     * Constant to define the field name for the Cobbler parent property
+     */
     protected static final String PARENT = "parent";
+    /**
+     * Constant to define the field name for the Cobbler modification time property
+     */
     protected static final String MTIME = "mtime";
+    /**
+     * Constant to define the field name for the Cobbler management classes property
+     */
     protected static final String MGMT_CLASSES = "mgmt_classes";
+    /**
+     * Constant to define the field name for the Cobbler template files property
+     */
     protected static final String TEMPLATE_FILES = "template_files";
+    /**
+     * Constant to define the field name for the Cobbler uid property
+     */
     protected static final String UID = "uid";
-
+    /**
+     * Constant to define the field name for the Cobbler redhat management key property
+     */
     private static final String REDHAT_KEY = "redhat_management_key";
+    /**
+     * Constant to define the value Cobbler uses for inheritance
+     */
     public static final String INHERIT_KEY = "<<inherit>>";
 
+    /**
+     * Holds the identifier for the XML-RPC API
+     */
     protected String handle;
+    /**
+     * The map with the raw data that an object has assigned to itself
+     */
     protected Map<String, Object> dataMap = new HashMap<>();
+    /**
+     * The map with the resolved data that is combined from all objects down the inheritance chain
+     */
+    protected Map<String, Object> dataMapResolved = new HashMap<>();
+    /**
+     * The connection to the Cobbler server
+     */
     protected CobblerConnection client;
 
     /**
      * Helper method used by all cobbler objects to
      * return a version of themselves by UID
-     * @see org.cobbler.Distro#lookupById for example usage.
      *
-     * @param client the Cobbler Connection
-     * @param id the UID of the distro/profile/system record
-     * @param findMethod the find xmlrpc method, eg: find_distro
+     * @param client     the Cobbler Connection
+     * @param id         the UID of the distro/profile/system record
+     * @param findMethod the find XML-RPC method, eg: find_distro
      * @return true if the cobbler object was found.
+     * @see org.cobbler.Distro#lookupById for example usage.
      */
     protected static Map<String, Object> lookupDataMapById(CobblerConnection client,
-                             String id, String findMethod) {
+                                                           String id, String findMethod) {
         if (id == null) {
             return null;
         }
         List<Map<String, Object>> objects = lookupDataMapsByCriteria(client,
-                                                            UID, id, findMethod);
+                UID, id, findMethod);
         if (!objects.isEmpty()) {
             return objects.get(0);
         }
@@ -86,39 +154,42 @@ public abstract class CobblerObject {
 
     /**
      * look up data maps by a certain criteria
-     * @param client the xmlrpc client
-     * @param critera (i.e. uid profile, etc..)
-     * @param value the value of the criteria
+     *
+     * @param client     the XML-RPC client
+     * @param critera    (i.e. uid profile, etc..)
+     * @param value      the value of the criteria
      * @param findMethod the find method to use (find_system, find_profile)
      * @return List of maps
      */
+    @SuppressWarnings("unchecked")
     protected static List<Map<String, Object>> lookupDataMapsByCriteria(
             CobblerConnection client, String critera, String value, String findMethod) {
         if (value == null) {
             return null;
         }
 
-        Map<String, String> criteria  = new HashMap<>();
+        Map<String, String> criteria = new HashMap<>();
         criteria.put(critera, value);
-        List<Map<String, Object>> objects = (List<Map<String, Object>>)
-                                client.invokeTokenMethod(findMethod, criteria);
-        return objects;
+        return (List<Map<String, Object>>)
+                client.invokeTokenMethod(findMethod, criteria);
 
     }
 
 
     /**
-     * Helper method used by all cobbler objects to
-     * return a Map of themselves by name.
-     * @see org.cobbler.Distro#lookupByName for example usage..
-     * @param client  the Cobbler Connection
-     * @param name the name of the cobbler object
-     * @param lookupMethod the name of the xmlrpc
-     *                       method to lookup: eg get_profile for profile
+     * Helper method used by all cobbler objects to return a Map of themselves
+     * by name.
+     *
+     * @param client       the Cobbler Connection
+     * @param name         the name of the cobbler object
+     * @param lookupMethod the name of the XML-RPC
+     *                     method to lookup: eg get_profile for profile
      * @return the Cobbler Object Data Map or null
+     * @see org.cobbler.Distro#lookupByName for example usage..
      */
+    @SuppressWarnings("unchecked")
     protected static Map<String, Object> lookupDataMapByName(CobblerConnection client,
-                                    String name, String lookupMethod) {
+                                                             String name, String lookupMethod) {
         Object obj = client.invokeMethod(lookupMethod, name);
         if ("~".equals(obj)) {
             return null;
@@ -130,17 +201,73 @@ public abstract class CobblerObject {
         return map;
     }
 
+    /**
+     * This method executes the Cobbler server side modification with a raw value
+     *
+     * @param key   The key to modify. This normally is one of the predefined constants
+     * @param value The value to modify.
+     */
     protected abstract void invokeModify(String key, Object value);
+
+    /**
+     * This method executes the Cobbler server side modification with a resolved value
+     *
+     * @param key   The key to modify. This normally is one of the predefined constants
+     * @param value The value to modify.
+     */
+    protected abstract void invokeModifyResolved(String key, Object value);
+
+    /**
+     * This method saves the entire object that is cached Cobbler server side to the disk.
+     */
     protected abstract void invokeSave();
+
+    /**
+     * This method removes the object from the Cobbler server
+     *
+     * @return Whether the removal of the object was successful or not
+     */
     protected abstract boolean invokeRemove();
+
+    /**
+     * This method retrieves the XML-RPC handle from the Cobbler server via the objects name
+     *
+     * @return The XML-RPC handle. If the handle has a {@code ___NEW___} prefix it was not saved to disk.
+     */
     protected abstract String invokeGetHandle();
+
+    /**
+     * This method forgets the local state of the object and loads the current state from the Cobbler server
+     */
     protected abstract void reload();
+
+    /**
+     * This method renames the current object
+     * <p>
+     * Modifying the name property directly will not work as expected.
+     *
+     * @param newName The new name for the object
+     */
     protected abstract void invokeRename(String newName);
 
+    /**
+     * This method retrieves the resolved value for an object. This is
+     * different from the raw value in the sense that some properties in
+     * Cobbler have the ability to be resolved to either a parent objects
+     * value or the application Settings.
+     *
+     * @param key The constant for the property of the field name in Cobbler
+     * @return The resolved value or in case an attribute doesn't resolve its raw value
+     */
     protected final Object getResolvedValue(String key) {
         return client.invokeTokenMethod("get_item_resolved_value", getUid(), key);
     }
 
+    /**
+     * Gets the XML-RPC handle internal to Cobbler
+     *
+     * @return The handle for Cobbler. If the Item is not saved to disk it will be prefixed with {@code ___NEW___}.
+     */
     protected String getHandle() {
         if (isBlank(handle)) {
             handle = invokeGetHandle();
@@ -148,20 +275,45 @@ public abstract class CobblerObject {
         return handle;
     }
 
+    /**
+     * This method modifies the object on Cobbler server side.
+     *
+     * @param key   The property name. Normally this is one of the constants
+     *              defined above.
+     * @param value The new value for the property. This must be a "raw" object
+     *              value and not a resolved one.
+     */
     protected void modify(String key, Object value) {
         invokeModify(key, value);
         dataMap.put(key, value);
     }
 
     /**
-     * calls save object to complete the commit
+     * This method modifies the object on Cobbler server side. It removes
+     * duplicated content that is inherited from other objects. As this
+     * function causes a lot of overhead on the server, please use it only when
+     * needed.
+     *
+     * @param key   The property name. Normally this is one of the constants
+     *              defined above.
+     * @param value The new value for the property. This may be a "raw" object
+     *              value or a resolved one.
+     */
+    protected void modifyResolved(String key, Object value) {
+        invokeModifyResolved(key, value);
+        dataMapResolved.put(key, value);
+    }
+
+    /**
+     * Calls save object to complete the commit
      */
     public void save() {
         invokeSave();
     }
 
     /**
-     * removes the kickstart object from cobbler.
+     * Removes the kickstart object from cobbler.
+     *
      * @return true if successful
      */
     public boolean remove() {
@@ -170,14 +322,18 @@ public abstract class CobblerObject {
 
 
     /**
+     * Getter for the comment
+     *
      * @return the comment
      */
     public String getComment() {
-        return (String)dataMap.get(COMMENT);
+        return (String) dataMap.get(COMMENT);
     }
 
 
     /**
+     * Setter for the comment
+     *
      * @param commentIn the comment to set
      */
     public void setComment(String commentIn) {
@@ -185,30 +341,70 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Getter for the management classes in their raw form
+     * TODO
+     *
      * @return the managementClasses
+     * @cobbler.inheritable This property can have the value
+     *                      {@link #INHERIT_KEY} and thus has an accompanying
+     *                      method {@link #getResolvedManagementClasses()}.
      */
-    public List<String> getManagementClasses() {
-        return (List<String>)dataMap.get(MGMT_CLASSES);
+    @SuppressWarnings("unchecked")
+    public Optional<List<String>> getManagementClasses() {
+        if (String.valueOf(dataMap.get(MGMT_CLASSES)).equals(INHERIT_KEY)) {
+            return Optional.empty();
+        }
+        return Optional.of((List<String>) dataMap.get(MGMT_CLASSES));
     }
 
+    /**
+     * Getter for the management classes in their resolved form
+     *
+     * @return the managementClasses
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getResolvedManagementClasses() {
+        return (List<String>) dataMapResolved.get(MGMT_CLASSES);
+    }
 
     /**
+     * Setter for the management classes in their raw form.
+     *
      * @param managementClassesIn the managementClasses to set
      */
-    public void setManagementClasses(List<String> managementClassesIn) {
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    public void setManagementClasses(Optional<List<String>> managementClassesIn) {
+        if (managementClassesIn.isEmpty()) {
+            modify(MGMT_CLASSES, INHERIT_KEY);
+            return;
+        }
         modify(MGMT_CLASSES, managementClassesIn);
     }
 
-
     /**
-     * @return the templateFiles
+     * Setter for the management classes in their resolved form
+     *
+     * @param managementClassesIn the managementClasses to set
      */
-    public Map<String, String> getTemplateFiles() {
-        return (Map<String, String>)dataMap.get(TEMPLATE_FILES);
+    public void setResolvedManagementClasses(List<String> managementClassesIn) {
+        modifyResolved(MGMT_CLASSES, managementClassesIn);
     }
 
 
     /**
+     * Getter for the template files
+     *
+     * @return the templateFiles
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, String> getTemplateFiles() {
+        return (Map<String, String>) dataMap.get(TEMPLATE_FILES);
+    }
+
+
+    /**
+     * Setter for the template files
+     *
      * @param templateFilesIn the templateFiles to set
      */
     public void setTemplateFiles(Map<String, String> templateFilesIn) {
@@ -217,13 +413,17 @@ public abstract class CobblerObject {
 
 
     /**
+     * Getter for the uid
+     *
      * @return the uid
      */
     public String getUid() {
-        return (String)dataMap.get(UID);
+        return (String) dataMap.get(UID);
     }
 
     /**
+     * Alias for the uid
+     *
      * @return the uid
      */
     public String getId() {
@@ -231,6 +431,8 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Setter for the uid
+     *
      * @param uidIn the uid to set
      */
     public void setUid(String uidIn) {
@@ -239,14 +441,18 @@ public abstract class CobblerObject {
 
 
     /**
+     * Getter for the Parent of the object
+     *
      * @return the parent
      */
     public String getParent() {
-        return (String)dataMap.get(PARENT);
+        return (String) dataMap.get(PARENT);
     }
 
 
     /**
+     * Setter for the Parent of the object
+     *
      * @param parentIn the parent to set
      */
     public void setParent(String parentIn) {
@@ -254,30 +460,63 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Getter for the owners.
+     *
      * @return the owners
+     * @cobbler.inheritable This field can have the value {@link #INHERIT_KEY}
+     *                      and thus has an accompanying resolved method
+     *                      {@link #getResolvedOwners()}.
      */
+    @SuppressWarnings("unchecked")
     public List<String> getOwners() {
-        return (List<String>)dataMap.get(OWNERS);
+        return (List<String>) dataMap.get(OWNERS);
     }
 
+    /**
+     * Getter to retrieve the resolved owners
+     *
+     * @return the owners
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getResolvedOwners() {
+        return (List<String>) dataMapResolved.get(OWNERS);
+    }
 
     /**
+     * Setter for the owners
+     *
      * @param ownersIn the owners to set
+     * @cobbler.inheritable This field can have the value {@link #INHERIT_KEY}
+     *                      and thus has an accompanying resolved method
+     *                      {@link #setResolvedOwners(List)} ()}.
      */
     public void setOwners(List<String> ownersIn) {
         modify(OWNERS, ownersIn);
     }
 
     /**
+     * Setter for the resolved owners
+     *
+     * @param ownersIn the owners to set
+     */
+    public void setResolvedOwners(List<String> ownersIn) {
+        modifyResolved(OWNERS, ownersIn);
+    }
+
+    /**
+     * Getter for the object creation time
+     *
      * @return the created
      */
     public Date getCreated() {
-        Double time = (Double)dataMap.get(CTIME);
+        Double time = (Double) dataMap.get(CTIME);
         // cobbler deals with seconds since epoch, Date expects milliseconds. Convert.
         return new Date(time.longValue() * 1000);
     }
 
     /**
+     * Setter for the object creation time
+     *
      * @param createdIn the created to set
      */
     public void setCreated(Date createdIn) {
@@ -286,6 +525,8 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Getter for the last modified date
+     *
      * @return the modified
      */
     public Date getModified() {
@@ -295,6 +536,8 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Setter for the modified date
+     *
      * @param modifiedIn the modified to set
      */
     public void setModified(Date modifiedIn) {
@@ -303,13 +546,17 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Getter for the object depth
+     *
      * @return the depth
      */
     public int getDepth() {
-        return (Integer)dataMap.get(DEPTH);
+        return (Integer) dataMap.get(DEPTH);
     }
 
     /**
+     * Setter for the object depth
+     *
      * @param depthIn the depth to set
      */
     public void setDepth(int depthIn) {
@@ -318,7 +565,10 @@ public abstract class CobblerObject {
 
 
     /**
+     * Getter for the kernel options
+     *
      * @return the kernelOptions
+     * @cobbler.inheritable TODO
      */
     @SuppressWarnings("unchecked")
     public String getKernelOptions() {
@@ -331,8 +581,9 @@ public abstract class CobblerObject {
 
     /**
      * Gets resolved kernel options as a dictionary
-     *
+     * <p>
      * The resolved value includes all the options inherited from above.
+     *
      * @return the kernel option map
      */
     @SuppressWarnings("unchecked")
@@ -341,7 +592,10 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Getter for the post kernel options
+     *
      * @return the kernelOptionsPost
+     * @cobbler.inheritable TODO
      */
     @SuppressWarnings("unchecked")
     public String getKernelOptionsPost() {
@@ -354,8 +608,9 @@ public abstract class CobblerObject {
 
     /**
      * Gets resolved kernel post options as a dictionary
-     *
+     * <p>
      * The resolved value includes all the options inherited from above.
+     *
      * @return the kernel post option map
      */
     @SuppressWarnings("unchecked")
@@ -363,12 +618,20 @@ public abstract class CobblerObject {
         return (Map<String, Object>) getResolvedValue(KERNEL_OPTIONS_POST);
     }
 
+    /**
+     * Converts a Java Map to a String that can be understood by Cobbler and
+     * then be converted to a Dictionary.
+     *
+     * @param map The map to convert
+     * @return The intended String
+     */
+    @SuppressWarnings("unchecked")
     private String convertOptionsMap(Map<String, Object> map) {
         StringBuilder string = new StringBuilder();
         for (String key : map.keySet()) {
             List<String> keyList;
             try {
-                 keyList = (List)map.get(key);
+                keyList = (List<String>) map.get(key);
             }
             catch (ClassCastException e) {
                 keyList = new ArrayList<>();
@@ -388,6 +651,8 @@ public abstract class CobblerObject {
 
 
     /**
+     * Setter for the kernel options
+     *
      * @param kernelOptionsIn the kernelOptions to set
      */
     public void setKernelOptions(String kernelOptionsIn) {
@@ -395,6 +660,8 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Setter for the kernel options
+     *
      * @param kernelOptionsIn the kernelOptions to set in the form of a map
      */
     public void setKernelOptions(Map<String, Object> kernelOptionsIn) {
@@ -402,43 +669,78 @@ public abstract class CobblerObject {
     }
 
     /**
+     * Setter for the kernel post options via {@link #INHERIT_KEY} or as a
+     * string that is splittable by Pythons {@code shelx.split} function.
+     *
      * @param kernelOptionsPostIn the kernelOptionsPost to set
+     * @see <a href="https://docs.python.org/3/library/shlex.html#shlex.split">Python - shlex.split</a>
      */
     public void setKernelOptionsPost(String kernelOptionsPostIn) {
         modify(SET_KERNEL_OPTIONS_POST, kernelOptionsPostIn);
     }
 
     /**
-     * @param kernelOptionsPostIn the kernelOptionsPost to set in the form of a map
+     * Setter for the kernel post options via its raw value
+     *
+     * @param kernelOptionsPostIn the kernelOptionsPost to set in the form of
+     *                            a map
      */
     public void setKernelOptionsPost(Map<String, Object> kernelOptionsPostIn) {
         setKernelOptionsPost(convertOptionsMap(kernelOptionsPostIn));
     }
 
     /**
-     * @return the kernelMeta
+     * Retrieves the raw auto-installation metadata for the object.
+     * TODO
+     *
+     * @return The kernelMeta. It could be that this returns {@link #INHERIT_KEY} instead of a Map.
+     * @cobbler.inheritable This property has a matching resolved method. {@link #getResolvedAutoinstallMeta()}
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getKsMeta() {
-        return (Map<String, Object>)dataMap.get(KS_META);
+        return (Map<String, Object>) dataMap.get(KS_META);
     }
 
+    /**
+     * Retrieves the resolved auto-installation metadata for the object.
+     *
+     * @return the kernelMeta
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getResolvedAutoinstallMeta() {
+        return (Map<String, Object>) dataMap.get(KS_META);
+    }
 
     /**
+     * Setter that modifies the autoinstall meta field for the object with a raw value
+     *
      * @param kernelMetaIn the kernelMeta to set
      */
-    public void setKsMeta(Map<String, ? extends Object> kernelMetaIn) {
+    public void setKsMeta(Map<String, ?> kernelMetaIn) {
         modify(SET_KS_META, kernelMetaIn);
     }
 
-
     /**
-     * @return the name
+     * Setter that modifies the autoinstall meta field for the object with a resolved value
+     *
+     * @param kernelMetaIn the kernelMeta to set
      */
-    public String getName() {
-        return (String)dataMap.get(NAME);
+    public void setResolvedAutoinstallMeta(Map<String, ?> kernelMetaIn) {
+        modify(SET_KS_META, kernelMetaIn);
     }
 
     /**
+     * Getter for the name property of a Cobbler object
+     *
+     * @return the name
+     */
+    public String getName() {
+        return (String) dataMap.get(NAME);
+    }
+
+    /**
+     * Setter for the name property of a Cobbler object
+     *
      * @param nameIn sets the new name
      */
     public void setName(String nameIn) {
@@ -449,6 +751,13 @@ public abstract class CobblerObject {
         reload();
     }
 
+    /**
+     * Helper method to check if a string is blank or not
+     *
+     * @param str The String to check.
+     * @return True if after trimming the String is of zero length. If instead of a String null was passed this method
+     * will also return True. All other cases return False.
+     */
     protected boolean isBlank(String str) {
         return str == null || str.trim().length() == 0;
     }
@@ -462,46 +771,61 @@ public abstract class CobblerObject {
     }
 
     /**
-     * @param key the red hat activation key
+     * Setter for the Red Hat management key with a String
+     *
+     * @param key the Red Hat activation key
+     * @see #getRedHatManagementKey()
      */
     public void setRedHatManagementKey(String key) {
         modify(REDHAT_KEY, key);
     }
 
     /**
-     * @param keys the red hat activation keys in a set
+     * Setter for the Red Hat management key with a Set of Strings that are comma delimited
+     *
+     * @param keys the Red Hat activation keys in a set
+     * @see #getRedHatManagementKey()
      */
     public void setRedHatManagementKey(Set<String> keys) {
         modify(REDHAT_KEY, StringUtils.defaultString(StringUtil.join(",", keys)));
     }
 
     /**
-     * get the red hat management key
-     * @return returns the red hat key as a string
+     * Get the Red Hat management key
+     * <p>
+     * This is used in the context of a
+     * {@link com.redhat.rhn.domain.kickstart.KickstartSession} to represent
+     * the currently attempted installation. The data is stored as a comma
+     * separated string in Cobbler.
+     *
+     * @return returns the red hat key(s) as a string
+     * @cobbler.inheritable TODO
      */
     public String getRedHatManagementKey() {
         return (String) dataMap.get(REDHAT_KEY);
     }
 
     /**
-     * get the redhate management key as a Set of keys
+     * Get the Red Hat management key as a Set of keys
+     *
      * @return returns the red hat key as a string
+     * @see #getRedHatManagementKey()
      */
     public Set<String> getRedHatManagementKeySet() {
         String keys = StringUtils.defaultString(getRedHatManagementKey());
         String[] sets = (keys).split(",");
-        Set set = new HashSet();
-        set.addAll(Arrays.asList(sets));
-        return set;
+        return new HashSet<>(Arrays.asList(sets));
     }
 
     /**
-     * remove the specified keys from the key set and add the specified set
+     * Remove the specified keys from the key set and add the specified set
+     *
      * @param keysToRemove list of tokens to remove
-     * @param keysToAdd list of tokens to add
+     * @param keysToAdd    list of tokens to add
+     * @see #getRedHatManagementKey()
      */
     public void syncRedHatManagementKeys(Collection<String> keysToRemove,
-                                            Collection<String> keysToAdd) {
+                                         Collection<String> keysToAdd) {
         Set<String> keySet = getRedHatManagementKeySet();
         keySet.removeAll(keysToRemove);
         keySet.addAll(keysToAdd);
