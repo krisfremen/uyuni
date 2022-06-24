@@ -35,13 +35,32 @@ public class ProfileTest {
     public void setUp() {
         String distroName = "testProfileTest";
         connectionMock = new MockConnection("http://localhost", "token");
-        testDistro = new Distro.Builder().setName(distroName).build(connectionMock);
+        testDistro = new Distro.Builder<String>()
+                .setName(distroName)
+                .setKernel("kernel")
+                .setInitrd("initrd")
+                .setArch("arch")
+                .build(connectionMock);
     }
 
     @AfterEach
     public void teardown() {
         testDistro = null;
         MockConnection.clear();
+    }
+
+    @Test
+    public void testDistro() {
+        // Arrange
+        String profileName = "distro";
+        Profile testProfile = Profile.create(connectionMock, profileName, testDistro);
+
+        // Act
+        testProfile.setDistro(testDistro);
+        Distro result = testProfile.getDistro();
+
+        // Assert
+        Assertions.assertEquals(testDistro.getUid(), result.getUid());
     }
 
     @Test
