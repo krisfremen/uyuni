@@ -1,4 +1,6 @@
 - revert "bootstrap repo: set optional packages"
+- Make the Salt Bundle optional for bootstrap repositories
+  for Debian 9 and SUSE Manager Proxy 4.2
 
 -------------------------------------------------------------------
 Wed Jun 22 11:16:33 CEST 2022 - jgonzalez@suse.com
