@@ -330,6 +330,11 @@ public abstract class CobblerObject {
      *                       false if you create a new object.
      */
     protected void modify(String key, Object value, boolean updateResolved) {
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException(
+                    "CobblerObject.modify cannot be null or emtpy! Must be a non-emtpy string!"
+            );
+        }
         invokeModify(key, value);
         dataMap.put(key, value);
         if (updateResolved) {
@@ -343,6 +348,9 @@ public abstract class CobblerObject {
      * @param key The key to update.
      */
     protected void refreshResolved(String key) {
+        if (getUid() == null) {
+            throw new RuntimeException("getUid() was null!");
+        }
         Object resolvedValue = client.invokeMethod("get_item_resolved_value", getUid(), key);
         dataMapResolved.put(key, resolvedValue);
     }
