@@ -351,6 +351,12 @@ public abstract class CobblerObject {
         if (getUid() == null) {
             throw new RuntimeException("getUid() was null!");
         }
+        if (key.equals(SystemRecord.SET_INTERFACES)) {
+            // This exception is needed here because the API Client cannot yet work with the new style property on
+            // Cobbler for Network interfaces. Since the network interface handling has not been polished, this is
+            // the most reasonable way to add this special case.
+            key = "interfaces";
+        }
         Object resolvedValue = client.invokeMethod("get_item_resolved_value", getUid(), key);
         dataMapResolved.put(key, resolvedValue);
     }

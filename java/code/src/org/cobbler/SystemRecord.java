@@ -85,7 +85,7 @@ public class SystemRecord extends CobblerObject {
     /**
      * Constant to define the field name for the setter of the interfaces of a System
      */
-    private static final String SET_INTERFACES = "modify_interface";
+    public static final String SET_INTERFACES = "modify_interface";
     /**
      * Constant to define the field name for the getter of the interfaces of a System
      */
